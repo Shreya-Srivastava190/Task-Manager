@@ -110,88 +110,127 @@
 
   <script type="text/babel">
 
-    function TodoApp() {
+   function TodoApp() {
 
-      const [addTask, setAddTask] = React.useState("");
-      const [tasks, setTasks] = React.useState([]);
+  const [addTask, setAddTask] = React.useState("");
+  const [tasks, setTasks] = React.useState([]);
+  const [i, setEditIndex] = React.useState(null);
+  const [e, setEditTask] = React.useState("");
 
-      function add() {
+  function edit(indexToEdit) {
+    setEditIndex(indexToEdit);
+    setEditTask(tasks[indexToEdit].text);
+  }
 
-        if (addTask.trim() === "") {
-          return;
-        }
+  function save() {
 
-        setTasks([
-          ...tasks,
-          {
-            text: addTask,
-            completed: false
-          }
-        ]);
+    const updatedTasks = tasks.map((task, index) => {
 
-        setAddTask("");
+      if (index === i) {
+        return {
+          ...task,
+          text: e
+        };
       }
 
-      function del(indexToDelete) {
+      return task;
 
-        const updatedTasks = tasks.filter((task, index) => {
-          return index !== indexToDelete;
-        });
+    });
 
-        setTasks(updatedTasks);
+    setTasks(updatedTasks);
+    setEditIndex(null);
+
+  }
+
+  function add() {
+
+    if (addTask.trim() === "") {
+      return;
+    }
+
+    setTasks([
+      ...tasks,
+      {
+        text: addTask,
+        completed: false
+      }
+    ]);
+
+    setAddTask("");
+  }
+
+  function del(indexToDelete) {
+
+    const updatedTasks = tasks.filter((task, index) => {
+      return index !== indexToDelete;
+    });
+
+    setTasks(updatedTasks);
+  }
+
+  function toggleComplete(indexToToggle) {
+
+    const updatedTasks = tasks.map((task, index) => {
+
+      if (index === indexToToggle) {
+
+        return {
+          ...task,
+          completed: !task.completed
+        };
+
       }
 
-      function toggleComplete(indexToToggle) {
+      return task;
 
-        const updatedTasks = tasks.map((task, index) => {
+    });
 
-          if (index === indexToToggle) {
+    setTasks(updatedTasks);
+  }
 
-            return {
-              ...task,
-              completed: !task.completed
-            };
+  return (
+    <>
 
-          }
+      <h1>Todo App</h1>
 
-          return task;
+      <div className="input-section">
 
-        });
+        <input
+          placeholder="Enter Task"
+          value={addTask}
+          onChange={(event) => {
+            setAddTask(event.target.value);
+          }}
+        />
 
-        setTasks(updatedTasks);
-      }
+        <button
+          className="add-btn"
+          onClick={add}
+        >
+          Add
+        </button>
 
-      return (
-        <>
+      </div>
 
-          <h1>Todo App</h1>
+      <div>
 
-          <div className="input-section">
+        {tasks.map((task, index) => {
 
-            <input
-              placeholder="Enter Task"
-              value={addTask}
-              onChange={(event) => {
-                setAddTask(event.target.value);
-              }}
-            />
+          return (
 
-            <button
-              className="add-btn"
-              onClick={add}
-            >
-              Add
-            </button>
+            <div className="task-item" key={index}>
 
-          </div>
+              {
+                index === i ? (
 
-          <div>
+                  <input
+                    value={e}
+                    onChange={(event) => {
+                      setEditTask(event.target.value);
+                    }}
+                  />
 
-            {tasks.map((task, index) => {
-
-              return (
-
-                <div className="task-item" key={index}>
+                ) : (
 
                   <span
                     className={
@@ -203,40 +242,58 @@
                     {task.text}
                   </span>
 
-                  <div className="btn-group">
+                )
+              }
 
-                    <button
-                      className="done-btn"
-                      onClick={() => toggleComplete(index)}
-                    >
-                      {task.completed ? "Undo" : "Done"}
+              <div className="btn-group">
+
+                <button
+                  className="done-btn"
+                  onClick={() => toggleComplete(index)}
+                >
+                  {task.completed ? "Undo" : "Done"}
+                </button>
+
+                <button
+                  className="delete-btn"
+                  onClick={() => del(index)}
+                >
+                  Delete
+                </button>
+
+                {
+                  index === i ? (
+
+                    <button onClick={save}>
+                      <img src="images.png" height="30"width="40"></img>
                     </button>
 
-                    <button
-                      className="delete-btn"
-                      onClick={() => del(index)}
-                    >
-                      Delete
+                  ) : (
+
+                    <button onClick={() => edit(index)}>
+                      <img src="edit.png"height="30" width="40"></img>
                     </button>
 
-                  </div>
+                  )
+                }
 
-                </div>
+              </div>
 
-              );
+            </div>
 
-            })}
+          );
 
-          </div>
+        })}
 
-        </>
-      );
-    }
+      </div>
 
-    const container = document.querySelector(".js-container");
+    </>
+  );
+}
 
-    ReactDOM.createRoot(container).render(<TodoApp />);
+const container = document.querySelector(".js-container");
 
+ReactDOM.createRoot(container).render(<TodoApp />);
   </script>
 
 </body>
