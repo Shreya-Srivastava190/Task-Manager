@@ -6,21 +6,20 @@
   <title>Todo App</title>
 
   <style>
-
     body {
       font-family: Arial, sans-serif;
-      background-color: #f4f4f4;
+      background: #f4f4f4;
       display: flex;
       justify-content: center;
       padding-top: 50px;
     }
 
     .js-container {
-      width: 400px;
+      width: 420px;
       background: white;
       padding: 20px;
       border-radius: 10px;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
     }
 
     h1 {
@@ -31,6 +30,7 @@
     .input-section {
       display: flex;
       gap: 10px;
+      margin-bottom: 10px;
     }
 
     input {
@@ -39,35 +39,25 @@
       border: 1px solid #ccc;
       border-radius: 6px;
       outline: none;
-      font-size: 14px;
     }
 
     .add-btn {
       padding: 10px 15px;
-      background-color: #4caf50;
+      background: #4caf50;
       color: white;
       border: none;
       border-radius: 6px;
       cursor: pointer;
     }
 
-    .add-btn:hover {
-      background-color: #43a047;
-    }
-
     .task-item {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-top: 12px;
       padding: 10px;
+      margin-top: 10px;
       border: 1px solid #ddd;
       border-radius: 6px;
-      background-color: #fafafa;
-    }
-
-    .task-text {
-      font-size: 15px;
     }
 
     .completed {
@@ -77,45 +67,73 @@
 
     .btn-group {
       display: flex;
-      gap: 6px;
+      gap: 5px;
     }
 
-    .done-btn,
-    .delete-btn {
-      border: none;
-      padding: 6px 10px;
-      border-radius: 5px;
+    button {
       cursor: pointer;
-      color: white;
+      border: none;
+      padding: 6px 8px;
+      border-radius: 5px;
     }
 
-    .done-btn {
-      background-color: #2196f3;
-    }
-
-    .delete-btn {
-      background-color: #f44336;
-    }
-
+    .done-btn { background: #2196f3; color: white; }
+    .delete-btn { background: #f44336; color: white; }
   </style>
 </head>
 
 <body>
 
-  <div class="js-container"></div>
+<div class="js-container"></div>
 
-  <script src="https://unpkg.com/supersimpledev/react.js"></script>
-  <script src="https://unpkg.com/supersimpledev/react-dom.js"></script>
-  <script src="https://unpkg.com/supersimpledev/babel.js"></script>
+<script src="https://unpkg.com/supersimpledev/react.js"></script>
+<script src="https://unpkg.com/supersimpledev/react-dom.js"></script>
+<script src="https://unpkg.com/supersimpledev/babel.js"></script>
 
-  <script type="text/babel">
+<script type="text/babel">
 
-   function TodoApp() {
+function TodoApp() {
 
   const [addTask, setAddTask] = React.useState("");
-  const [tasks, setTasks] = React.useState([]);
+  const [tasks, setTasks] = React.useState(() => {
+    const saved = localStorage.getItem("tasks");
+    return saved ? JSON.parse(saved) : [];
+  });
+
   const [i, setEditIndex] = React.useState(null);
   const [e, setEditTask] = React.useState("");
+  const [search, setSearch] = React.useState("");
+  const [filter, setFilter] = React.useState("all");
+
+  React.useEffect(() => {
+    localStorage.setItem("tasks", JSON.stringify(tasks));
+  }, [tasks]);
+
+  function add() {
+    if (addTask.trim() === "") return;
+
+    setTasks([
+      ...tasks,
+      { text: addTask, completed: false }
+    ]);
+
+    setAddTask("");
+  }
+
+  function del(indexToDelete) {
+    setTasks(tasks.filter((_, index) => index !== indexToDelete));
+  }
+
+  function toggleComplete(indexToToggle) {
+    const updated = tasks.map((task, index) => {
+      if (index === indexToToggle) {
+        return { ...task, completed: !task.completed };
+      }
+      return task;
+    });
+
+    setTasks(updated);
+  }
 
   function edit(indexToEdit) {
     setEditIndex(indexToEdit);
@@ -123,178 +141,118 @@
   }
 
   function save() {
-
-    const updatedTasks = tasks.map((task, index) => {
-
+    const updated = tasks.map((task, index) => {
       if (index === i) {
-        return {
-          ...task,
-          text: e
-        };
+        return { ...task, text: e };
       }
-
       return task;
-
     });
 
-    setTasks(updatedTasks);
+    setTasks(updated);
     setEditIndex(null);
-
   }
 
-  function add() {
-
-    if (addTask.trim() === "") {
-      return;
-    }
-
-    setTasks([
-      ...tasks,
-      {
-        text: addTask,
-        completed: false
-      }
-    ]);
-
-    setAddTask("");
-  }
-
-  function del(indexToDelete) {
-
-    const updatedTasks = tasks.filter((task, index) => {
-      return index !== indexToDelete;
+  const filteredTasks = tasks
+    .filter((task) =>
+      task.text.toLowerCase().includes(search.toLowerCase())
+    )
+    .filter((task) => {
+      if (filter === "active") return !task.completed;
+      if (filter === "completed") return task.completed;
+      return true;
     });
-
-    setTasks(updatedTasks);
-  }
-
-  function toggleComplete(indexToToggle) {
-
-    const updatedTasks = tasks.map((task, index) => {
-
-      if (index === indexToToggle) {
-
-        return {
-          ...task,
-          completed: !task.completed
-        };
-
-      }
-
-      return task;
-
-    });
-
-    setTasks(updatedTasks);
-  }
 
   return (
     <>
-
       <h1>Todo App</h1>
 
+      {/* ADD */}
       <div className="input-section">
-
         <input
           placeholder="Enter Task"
           value={addTask}
-          onChange={(event) => {
-            setAddTask(event.target.value);
-          }}
+          onChange={(e) => setAddTask(e.target.value)}
         />
+        <button className="add-btn" onClick={add}>Add</button>
+      </div>
 
-        <button
-          className="add-btn"
-          onClick={add}
-        >
-          Add
+      {/* SEARCH */}
+      <div className="input-section">
+        <input
+          placeholder="Search Task"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+        />
+      </div>
+
+      {/* FILTER BUTTONS */}
+      <div className="input-section">
+
+        <button onClick={() => setFilter("all")}>
+          All
+        </button>
+
+        <button onClick={() => setFilter("active")}>
+          Active
+        </button>
+
+        <button onClick={() => setFilter("completed")}>
+          Completed
         </button>
 
       </div>
 
+      {/* TASK LIST */}
       <div>
 
-        {tasks.map((task, index) => {
+        {filteredTasks.map((task, index) => (
+          <div className="task-item" key={index}>
 
-          return (
+            {
+              index === i ? (
+                <input
+                  value={e}
+                  onChange={(e) => setEditTask(e.target.value)}
+                />
+              ) : (
+                <span className={task.completed ? "completed" : ""}>
+                  {task.text}
+                </span>
+              )
+            }
 
-            <div className="task-item" key={index}>
+            <div className="btn-group">
+
+              <button className="done-btn" onClick={() => toggleComplete(index)}>
+                {task.completed ? "Undo" : "Done"}
+              </button>
+
+              <button className="delete-btn" onClick={() => del(index)}>
+                Delete
+              </button>
 
               {
                 index === i ? (
-
-                  <input
-                    value={e}
-                    onChange={(event) => {
-                      setEditTask(event.target.value);
-                    }}
-                  />
-
+                  <button onClick={save}>Save</button>
                 ) : (
-
-                  <span
-                    className={
-                      task.completed
-                        ? "task-text completed"
-                        : "task-text"
-                    }
-                  >
-                    {task.text}
-                  </span>
-
+                  <button onClick={() => edit(index)}>Edit</button>
                 )
               }
 
-              <div className="btn-group">
-
-                <button
-                  className="done-btn"
-                  onClick={() => toggleComplete(index)}
-                >
-                  {task.completed ? "Undo" : "Done"}
-                </button>
-
-                <button
-                  className="delete-btn"
-                  onClick={() => del(index)}
-                >
-                  Delete
-                </button>
-
-                {
-                  index === i ? (
-
-                    <button onClick={save}>
-                      <img src="images.png" height="30"width="40"></img>
-                    </button>
-
-                  ) : (
-
-                    <button onClick={() => edit(index)}>
-                      <img src="edit.png"height="30" width="40"></img>
-                    </button>
-
-                  )
-                }
-
-              </div>
-
             </div>
 
-          );
-
-        })}
+          </div>
+        ))}
 
       </div>
-
     </>
   );
 }
 
 const container = document.querySelector(".js-container");
-
 ReactDOM.createRoot(container).render(<TodoApp />);
-  </script>
+
+</script>
 
 </body>
 </html>
